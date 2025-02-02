@@ -16,46 +16,46 @@ app.add_middleware(SessionMiddleware, secret_key=SECRET_KEY)
 
 PANEL_APP_URL = os.getenv("PANEL_APP_URL", "http://localhost:5006")
 
-providers = {
+providers = {    
     "github": {
-        "CLIENT_ID": os.getenv("GITHUB_CLIENT_ID"),
-        "CLIENT_SECRET": os.getenv("GITHUB_CLIENT_SECRET"),
-        "USER_INFO_URL": "https://api.github.com/user",
+        "client_id": os.getenv("GITHUB_CLIENT_ID"),
+        "client_secret": os.getenv("GITHUB_CLIENT_SECRET"),
+        "authorize_url": "https://github.com/login/oauth/authorize",
+        "access_token_url":"https://github.com/login/oauth/access_token",  # 🔹 Explicitly Set Here
+        "userinfo_endpoint": "https://api.github.com/user",
+        "client_kwargs": {"access_token_url": "https://github.com/login/oauth/access_token"}  # 🔹 Manually Forced
     },
     "azure": {
-        "CLIENT_ID": os.getenv("AZURE_CLIENT_ID"),
-        "CLIENT_SECRET": os.getenv("AZURE_CLIENT_SECRET"),
-        "TENANT_ID": os.getenv("AZURE_TENANT_ID"),
-        "USER_INFO_URL": "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,otherMails",
+        "client_id": os.getenv("AZURE_CLIENT_ID"),
+        "client_secret": os.getenv("AZURE_CLIENT_SECRET"),
+        "authorize_url": f"https://login.microsoftonline.com/{os.getenv('AZURE_TENANT_ID')}/oauth2/v2.0/authorize",
+        "access_token_url": f"https://login.microsoftonline.com/{os.getenv('AZURE_TENANT_ID')}/oauth2/v2.0/token",
+        "userinfo_endpoint": "https://graph.microsoft.com/v1.0/me?$select=displayName,mail,userPrincipalName,otherMails",
+        "server_metadata_url": f"https://login.microsoftonline.com/{os.getenv('AZURE_TENANT_ID')}/v2.0/.well-known/openid-configuration",
+        "client_kwargs": {"scope": "openid profile email User.Read"}
     },
+    "google": {
+        "client_id": os.getenv("GOOGLE_CLIENT_ID"),
+        "client_secret": os.getenv("GOOGLE_CLIENT_SECRET"),
+        "userinfo_endpoint": "https://www.googleapis.com/oauth2/v1/userinfo",
+        "server_metadata_url": "https://accounts.google.com/.well-known/openid-configuration",
+        "client_kwargs":{
+            'scope': 'openid email profile',
+            'prompt': 'select_account',  # force to select account
+        }
+    }
 }
 
-
 oauth = OAuth()
-oauth.register(
-    name="github",
-    client_id=providers["github"]["CLIENT_ID"],
-    client_secret=providers["github"]["CLIENT_SECRET"],
-    authorize_url="https://github.com/login/oauth/authorize",
-    access_token_url="https://github.com/login/oauth/access_token",  # 🔹 Explicitly Set Here
-    userinfo_endpoint=providers["github"]["USER_INFO_URL"],
-    client_kwargs={"access_token_url": "https://github.com/login/oauth/access_token"}  # 🔹 Manually Forced
-)
-oauth.register(
-    name="azure",
-    client_id=providers["azure"]["CLIENT_ID"],
-    client_secret=providers["azure"]["CLIENT_SECRET"],
-    authorize_url=f"https://login.microsoftonline.com/{os.getenv('AZURE_TENANT_ID')}/oauth2/v2.0/authorize",
-    access_token_url=f"https://login.microsoftonline.com/{os.getenv('AZURE_TENANT_ID')}/oauth2/v2.0/token",
-    userinfo_endpoint="https://graph.microsoft.com/oidc/userinfo",
-    server_metadata_url=f"https://login.microsoftonline.com/{os.getenv('AZURE_TENANT_ID')}/v2.0/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid profile email User.Read"},
-)
+
+for provider, config in providers.items():
+    oauth.register(**config, name=provider)
+
 
 
 @app.get("/login/{provider}")
 async def login(provider: str, request: Request):
-    if provider not in ["github", "azure"]:
+    if provider not in providers.keys():
         return JSONResponse({"error": "Invalid provider"}, status_code=400)
 
     oauth_client = oauth.create_client(provider)
@@ -66,7 +66,7 @@ async def login(provider: str, request: Request):
 async def get_user_info(provider, token):
     async with httpx.AsyncClient() as client:
         user_info_response = await client.get(
-            providers[provider]["USER_INFO_URL"],
+            providers[provider]["userinfo_endpoint"],
             headers={"Authorization": f"Bearer {token['access_token']}"},
         )
         user_info = user_info_response.json()

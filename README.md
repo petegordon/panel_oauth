@@ -8,6 +8,8 @@ You need to register with Github and Azure to get ClientID, ClientSecret, and Az
 
 [Microsoft Azure App Registration](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app?tabs=certificate)
 
+[Google App Registration](https://console.cloud.google.com/auth/clients)
+
 ## Run Application
 
 Run FASTAPI authentication application

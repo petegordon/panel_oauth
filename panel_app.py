@@ -29,10 +29,9 @@ if not user:
     login_buttons = pn.Column(
         pn.pane.Markdown("## Login with GitHub or Azure"),
         pn.widgets.Button(name="Login with GitHub", button_type="primary", width=200, align="center"), 
-        pn.widgets.Button(name="Login with Azure", button_type="primary", width=200, align="center")
+        pn.widgets.Button(name="Login with Azure", button_type="primary", width=200, align="center"),
+        pn.widgets.Button(name="Login with Google", button_type="primary", width=200, align="center")
     )
-
-
 
     def redirect(provider):
         """Updates the hidden HTML pane to trigger JavaScript redirection."""
@@ -48,8 +47,12 @@ if not user:
     def login_azure(event):
         redirect("azure")
 
+    def login_google(event):
+        redirect("google")
+
     login_buttons[1].on_click(login_github)
     login_buttons[2].on_click(login_azure)
+    login_buttons[3].on_click(login_google)
     pn.Column(login_buttons, js_redirect).servable()
 
 else:
