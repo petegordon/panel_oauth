@@ -6,12 +6,12 @@ load_dotenv()
 
 pn.extension()
 
-FASTAPI_AUTH_URL = os.getenv("FASTAPI_AUTH_URL","http://localhost:8000")
+AUTH_URL = os.getenv("AUTH_URL","http://localhost:8000")
 
 def get_user():
     """Fetch user info from FastAPI OAuth service."""
     try:
-        response = requests.get(f"{FASTAPI_AUTH_URL}/user", cookies=pn.state.cookies)
+        response = requests.get(f"{AUTH_URL}/user", cookies=pn.state.cookies)
         if response.status_code == 401:
             return None
         return response.json()
@@ -37,7 +37,7 @@ if not user:
         """Updates the hidden HTML pane to trigger JavaScript redirection."""
         js_redirect.object = f"""
         <script>
-            window.location.href = "{FASTAPI_AUTH_URL}/login/{provider}";
+            window.location.href = "{AUTH_URL}/login/{provider}";
         </script>
         """
 
@@ -64,7 +64,7 @@ else:
         
         js_redirect.object = f"""
         <script>
-            window.location.href = '{FASTAPI_AUTH_URL}/logout';
+            window.location.href = '{AUTH_URL}/logout';
         </script>
         """
         print("Should have redirected and logged out.")

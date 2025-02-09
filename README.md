@@ -14,7 +14,7 @@ You need to register with Github and Azure to get ClientID, ClientSecret, and Az
 
 Run FASTAPI authentication application
 ```bash
-uvicorn auth_server:app --reload --host 0.0.0.0 --port 8000
+uvicorn auth_fastapi:app --reload --host 0.0.0.0 --port 8000
 ```
 
 Run Python Panel application
