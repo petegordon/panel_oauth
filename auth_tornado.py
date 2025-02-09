@@ -134,16 +134,21 @@ class LogoutHandler(tornado.web.RequestHandler):
         self.clear_cookie("user")
         self.redirect(PANEL_APP_URL)
 
+def get_routes(defaultUserRoute=False):
+    routes = [
+                (r"/login/(.*)", TornadoOAuthHandler),
+                (r"/auth/callback/(.*)", OAuthCallbackHandler),
+                (r"/user", UserHandler),
+                (r"/logout", LogoutHandler),
+            ]
+    if defaultUserRoute:
+        routes.append((r"/", UserHandler))
+    
+    return routes
 
 def make_app():
     return tornado.web.Application(
-        [
-            (r"/", UserHandler),
-            (r"/login/(.*)", TornadoOAuthHandler),
-            (r"/auth/callback/(.*)", OAuthCallbackHandler),
-            (r"/user", UserHandler),
-            (r"/logout", LogoutHandler),
-        ],
+        get_routes(defaultUserRoute=True),
         cookie_secret=SECRET_KEY,
         debug=True,
     )
